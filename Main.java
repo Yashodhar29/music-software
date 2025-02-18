@@ -11,7 +11,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 // import java.util.concurrent.ExecutorCompletionService;
 // import java.util.concurrent.Flow;
-import java.awt.Dimension;
+import java.awt.Dimension; 
 
 class RoundedButton extends JButton {
     public RoundedButton(ImageIcon icon) {
@@ -55,10 +55,11 @@ class ImagePanel extends JPanel {
         super();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "Yashodhar#123");
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/music", "root", "Yashodhar#123");
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT * FROM pathtesting where id = 1;");
 
+            System.out.println(rs.getString("image_path"));
             if(rs.next()) {
                 imagePath = rs.getString("image_path");
             }
@@ -71,7 +72,7 @@ class ImagePanel extends JPanel {
 
 
         }catch(Exception e) {
-            System.out.println("Some error occured");
+            System.out.println(e.getMessage());
         }
 
         backgroundImage = new ImageIcon(imagePath).getImage();
@@ -88,16 +89,14 @@ class ImagePanel extends JPanel {
 public class Main {
     private static Clip clip;
     static boolean isPlaying = false;
+    static boolean isAsideOpen = false;
 
     public static void main(String[] args) {
-        // Create JFrame
-
-
 
         JFrame frame = new JFrame("Music Player");
         frame.setSize(480, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(new BorderLayout()); // Ensure proper layout
+        frame.setLayout(new BorderLayout());
         frame.setResizable(false);
 
         // Buttons
@@ -117,6 +116,7 @@ public class Main {
         optionsPanel.add(playButton);
         optionsPanel.add(nextButton);
 
+
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT)); 
         topPanel.setPreferredSize(new Dimension(frame.getWidth(), 50));
         RoundedButton menuButton = new RoundedButton(new ImageIcon("./assets/menu.png"));
@@ -124,25 +124,49 @@ public class Main {
         // menuButton.setPreferredSize(new Dimension(80, 100));
         menuButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2, true));
 
+
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 50));
-        // centerPanel.setPreferredSize(new Dimension(40, 40));
         centerPanel.setBackground(Color.RED);
 
         ImagePanel imagePanel = new ImagePanel("./assets/image.png");
         imagePanel.setPreferredSize(new Dimension(300, 300));
         imagePanel.setBackground(Color.BLACK);
-
         centerPanel.add(imagePanel);
 
+        JLayeredPane layeredPane = frame.getLayeredPane();
 
 
+        JPanel asidePanel = new JPanel();
+        asidePanel.setBackground(Color.BLACK);
+        asidePanel.setBounds(0, 0, 300, frame.getHeight());
+        asidePanel.setVisible(false); 
+        
+        layeredPane.add(asidePanel, JLayeredPane.POPUP_LAYER); 
+
+
+        
+        // JPanel topAsidePanel = new JPanel(new FlowLayout(FlowLayout.LEFT)); 
+        // topAsidePanel.setPreferredSize(new Dimension(asidePanel.getWidth(), 50));
+        // topAsidePanel.setBackground(Color.BLACK);
+        // topAsidePanel.setOpaque(true);
+        // RoundedButton crossButton = new RoundedButton(new ImageIcon("./assets/close.png"));
+        // crossButton.setBackground(Color.BLACK);
+        // crossButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2, true));
+        // topAsidePanel.add(crossButton, FlowLayout.LEFT);
+        // asidePanel.add(topAsidePanel, BorderLayout.NORTH);
+        
         topPanel.add(menuButton); 
+        // frame.add(topAsidePanel);
+        // frame.add(layeredPane);
+        // frame.add(asidePanel, BorderLayout.EAST);  // dont add if JLayerdPane is used
         frame.add(topPanel, BorderLayout.NORTH); 
         frame.add(centerPanel, BorderLayout.CENTER); 
         frame.add(optionsPanel, BorderLayout.SOUTH);
-        
         frame.setVisible(true); 
         
+        menuButton.addActionListener(e -> asidePanel.setVisible(!asidePanel.isVisible()));
+        
+
         try {
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("music.wav"));
             clip = AudioSystem.getClip();
@@ -150,13 +174,13 @@ public class Main {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        
 
-        // Define icons as instance variables so they can be referenced properly
+
         ImageIcon playIcon = new ImageIcon(new ImageIcon("./assets/play.png").getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH));
         ImageIcon pauseIcon = new ImageIcon(new ImageIcon("./assets/pause.png").getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH));
 
-        playButton.setIcon(playIcon); // Set initial icon
-        // long currentPosition = 0;
+        playButton.setIcon(playIcon); 
         
         playButton.addActionListener(e -> {
 
